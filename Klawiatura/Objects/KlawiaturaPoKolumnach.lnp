@@ -1,0 +1,4 @@
+".\Objects\KlawiaturaPoKolumnach.obj" 
+TO ".\Objects\KlawiaturaPoKolumnach" 
+
+PRINT(".\Listings\KlawiaturaPoKolumnach.map")

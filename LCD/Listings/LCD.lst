@@ -1,0 +1,325 @@
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LCD
+OBJECT MODULE PLACED IN .\Objects\LCD.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE LCD.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\LCD.lst) TABS
+                    -(2) OBJECT(.\Objects\LCD.obj)
+
+line level    source
+
+   1          #define Test 0  // 1 - do testowania
+   2                          // 0 - normalna praca
+   3          // Definicje zasobow sprzetowych
+   4          sfr  P2    = 0xA0;
+   5          sbit P2_6  = P2^6;
+   6          sbit P2_5  = P2^5;
+   7          sbit P2_4  = P2^4;
+   8          sbit P2_3  = P2^3;
+   9          sbit P2_2  = P2^2;
+  10          sbit P2_1  = P2^1;
+  11          sbit P2_0  = P2^0;
+  12          
+  13          unsigned char LoadingChar0[] = {  0x10,0x10,0x10,0x10,0x10,0x10,0x10};
+  14          unsigned char LoadingChar1[] = {  0x18,0x18,0x18,0x18,0x18,0x18,0x18};
+  15          unsigned char LoadingChar2[] = {  0x1c,0x1c,0x1c,0x1c,0x1c,0x1c,0x1c};
+  16          unsigned char LoadingChar3[] = {  0x1e,0x1e,0x1e,0x1e,0x1e,0x1e,0x1e};
+  17          unsigned char LoadingChar4[] = {  0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f};
+  18          
+  19          // Definicje ogolne
+  20          #define False         0  
+  21          #define True          1
+  22          
+  23          // Definicje podlaczenia wyswietlacza LCD
+  24          #define LCD_RS    P2_4         /* p1.4 LCD Register Select line           */
+  25          #define LCD_RW    P2_5         /* p1.5 LCD Read / Write line              */
+  26          #define LCD_E     P2_6         /* p1.6 LCD Enable line                    */
+  27          #define LCD_DB4   P2_0         /* high nibble of port 1 is used for data  */
+  28          #define LCD_DB5   P2_1         /* high nibble of port 1 is used for data  */
+  29          #define LCD_DB6   P2_2         /* high nibble of port 1 is used for data  */
+  30          #define LCD_DB7   P2_3         /* high nibble of port 1 is used for data  */
+  31          
+  32          // Definicje komend wyswietlacza LCD
+  33          #define LCD_CONFIG          0x28
+  34          #define LCD_CLEAR           0x01
+  35          #define LCD_HOME            0x02
+  36          #define LCD_ENTRY_MODE      0x06
+  37          #define LCD_DISPLAY_OFF     0x08
+  38          #define LCD_CURSOR_ON       0x0A
+  39          #define LCD_DISPLAY_ON      0x0C
+  40          #define LCD_CURSOR_BLINK    0x0D
+  41          #define LCD_CURSOR_LINE     0x0E
+  42          #define LCD_CURSOR_COM      0x0F
+  43          #define LCD_CURSOR_LEFT     0x10
+  44          #define LCD_CURSOR_RIGHT    0x14
+  45          #define LCD_SHIFT_LEFT      0x18
+  46          #define LCD_SHIFT_RIGHT     0x1C
+  47          #define LCD_SET_CGRAM_ADDR  0x40
+  48          #define LCD_SET_DDRAM_ADDR  0x80
+  49          
+  50          static void Lcd_WriteData (unsigned char LcdData);
+  51          /*
+  52          #ifndef __LCD4B_H__
+  53          #define __LCD4B_H__
+  54          
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 2   
+
+  55          sbit LcdEnable = 0xA0^6;
+  56          sbit LcdRead  = 0xA0^5;
+  57          sbit LcdReg = 0xA0^4;
+  58          
+  59          void WriteToLcdCtrlRegister(char X)
+  60          {
+  61            LcdReg = 0;               // ustawienie sygnalów sterujacych
+  62            LcdRead = 0;
+  63            Lcd_WriteData(X);
+  64          }
+  65          
+  66          void LcdWrite(char X)
+  67          {
+  68            LcdReg = 1;
+  69            LcdRead = 0;
+  70            Lcd_WriteData(X);
+  71          }
+  72          
+  73          void DefineSpecialCharacters(char *ptr)
+  74          {
+  75            WriteToLcdCtrlRegister(0x40);   // ustawienie trybu definicji
+  76            while (*ptr != 0)           // petla wykonywana do napotkania znaku konca tablicy
+  77            {
+  78              LcdWrite(*ptr);         // zapis znaku do lcd cgram
+  79              ptr++;                // nastepna pozycja tablicy (wskaznika)
+  80            }
+  81            WriteToLcdCtrlRegister(0x80);   // przelaczenie do trybu wyswietlania
+  82          }
+  83          */
+  84          // Definicje ekranow
+  85          static unsigned char code Screan[] =  "                "
+  86                                                "                "
+  87                                                "                "
+  88                                                "                ";
+  89          
+  90          // Importowane procedury i funkcje
+  91          extern w1ms();
+  92          extern w5mS();
+  93          extern w50mS();
+  94          
+  95          
+  96          void Lcd_WriteControl (unsigned char LcdCommand)
+  97           {
+  98   1         unsigned char Lcd_Comm = 0;
+  99   1         static bit LCDReady;
+ 100   1          
+ 101   1         LCD_RS = False;
+ 102   1         LCD_RW = False;
+ 103   1      
+ 104   1         Lcd_Comm = LcdCommand >> 4;
+ 105   1         P2 &= 0xF0;
+ 106   1         P2 |= Lcd_Comm;
+ 107   1      
+ 108   1         LCD_E = True;
+ 109   1         LCD_E = False;
+ 110   1      
+ 111   1         Lcd_Comm = LcdCommand & 0x0F;  
+ 112   1         P2 &=0xF0;      // P2 = P2 & 0xF0
+ 113   1         P2 |= Lcd_Comm;
+ 114   1      
+ 115   1         LCD_E = True;
+ 116   1         LCD_E = False;
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 3   
+
+ 117   1      
+ 118   1         P2 |= 0x0F;     // P2 = P2 | 0x0F
+ 119   1      
+ 120   1         LCD_RW = True;
+ 121   1         LCD_RS = False;
+ 122   1         
+ 123   1         if (Test == 0)
+ 124   1          {
+ 125   2            LCDReady = 1;
+ 126   2            while (LCDReady == 1)
+ 127   2             {
+ 128   3               LCD_E = True;
+ 129   3               LCDReady = LCD_DB7;
+ 130   3               LCD_E  = False;
+ 131   3               LCD_E = True;
+ 132   3               LCD_E  = False;
+ 133   3             }
+ 134   2          }          
+ 135   1       }
+ 136          
+ 137          // Wyslanie danych do wyswietlacza LCD. Magistrala 4-o bitowa
+ 138          static void Lcd_WriteData (unsigned char LcdData)
+ 139           {
+ 140   1         unsigned char Lcd_Data = 0;
+ 141   1         static bit LCDReady;
+ 142   1       
+ 143   1         LCD_RS = True;
+ 144   1         LCD_RW = False;
+ 145   1      
+ 146   1         Lcd_Data = LcdData >> 4;
+ 147   1         P2 &= 0xF0;
+ 148   1         P2 |= Lcd_Data;
+ 149   1      
+ 150   1         LCD_E = True;
+ 151   1         LCD_E = False;
+ 152   1      
+ 153   1         Lcd_Data = LcdData & 0x0F;  
+ 154   1         P2 &=0xF0;   
+ 155   1         P2 |= Lcd_Data;
+ 156   1      
+ 157   1         LCD_E = True;
+ 158   1         LCD_E = False;
+ 159   1      
+ 160   1         P2 |= 0x0F;
+ 161   1      
+ 162   1         LCD_RW = True;
+ 163   1         LCD_RS = False;
+ 164   1         
+ 165   1         if (Test == 0)
+ 166   1          {
+ 167   2            LCDReady = 1;
+ 168   2            while (LCDReady == 1)
+ 169   2             {
+ 170   3               LCD_E = True;
+ 171   3               LCDReady = LCD_DB7;
+ 172   3               LCD_E  = False;
+ 173   3               LCD_E  = True;
+ 174   3               LCD_E  = False;
+ 175   3             }
+ 176   2          }             
+ 177   1       }
+ 178          
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 4   
+
+ 179          // Wyswietlenie znaku w miejscu polozenie kursora
+ 180          void Lcd_DisplayCharacter (char a_char)
+ 181           {
+ 182   1         Lcd_WriteData(a_char);
+ 183   1       }
+ 184          
+ 185          /* Ustawienie kursora na wskazany wiersz i kolumne.
+ 186          *     1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16
+ 187          *    ----------------------------------------------------------------
+ 188          * 1 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ 189          * 2 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ 190          * 3 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ 191          * 4 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ 192          */
+ 193          void Lcd_Cursor (char row, char column)
+ 194           {
+ 195   1         if (row == 1) Lcd_WriteControl (0x80 + column - 1);
+ 196   1         if (row == 2) Lcd_WriteControl (0xc0 + column - 1);
+ 197   1         if (row == 3) Lcd_WriteControl (0x90 + column - 1);
+ 198   1         if (row == 4) Lcd_WriteControl (0xd0 + column - 1);
+ 199   1       }
+ 200          
+ 201          // Wyswietlenie ciagu znakow w konkretym wierszu (bez zawijania wiersza)
+ 202          void Lcd_DisplayRow (char row, char *string)
+ 203           {
+ 204   1         char i;
+ 205   1         Lcd_Cursor (row, 1);
+ 206   1         for (i=0; i<16; i++) Lcd_DisplayCharacter (*string++);
+ 207   1       }
+ 208          
+ 209          
+ 210          // Wyswietlenie calego ekranu - 64 znaki. Znaki zawarte w tablicy
+ 211          /* przyklad:
+ 212          ** char screen[] =  "PBW-850   2003r."
+ 213          **                  "----------------"
+ 214          **                  "  K. Murawski   "
+ 215          **                  "J. Chudzikiewicz";
+ 216          **      LCD_DisplayScreen(screen);
+ 217          */
+ 218          void Lcd_DisplayScreen (char *ptr)
+ 219           {
+ 220   1         Lcd_DisplayRow(1,ptr +  0);
+ 221   1         Lcd_DisplayRow(2,ptr + 16);
+ 222   1         Lcd_DisplayRow(3,ptr + 32);
+ 223   1         Lcd_DisplayRow(4,ptr + 48);
+ 224   1       }
+ 225          
+ 226          // Wyswietlenie ekranu powitalnego
+ 227          void LcdWelcome(void)
+ 228           {
+ 229   1         Lcd_DisplayScreen(Screan);        
+ 230   1       }
+ 231          
+ 232          // Wyswietlenie ciagu znakow od danej kolumny i wiersza
+ 233          void Lcd_DisplayString (char row, char column, char *string)
+ 234           {
+ 235   1         Lcd_Cursor (row, column);
+ 236   1         while (*string) Lcd_DisplayCharacter (*string++);
+ 237   1       }
+ 238          
+ 239           void LCDBuildChar(unsigned char loc, unsigned char *p)
+ 240          {
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 5   
+
+ 241   1           unsigned char i;
+ 242   1         
+ 243   1           if(loc<8)                                 //If valid address
+ 244   1         {
+ 245   2               Lcd_WriteControl(0x40+(loc*8));               //Write to CGRAM
+ 246   2               for(i=0;i<8;i++)Lcd_WriteData(p[i]);                   //Write the character pattern to CGRAM
+ 247   2         }
+ 248   1         Lcd_WriteControl(0x80);                           //shift back to DDRAM location 0
+ 249   1      }
+ 250           
+ 251          // Inicjalizacja wyswietlacza; 4 wiersze, 4 bitowa magistrala danych
+ 252          void LcdInit(void)
+ 253           {
+ 254   1         w50mS();
+ 255   1         P2 = 0x83;
+ 256   1         LCD_E   = True;
+ 257   1           w1ms();
+ 258   1         LCD_E   = False;
+ 259   1         w5mS();
+ 260   1         LCD_E   = True;
+ 261   1           w1ms();
+ 262   1         LCD_E   = False;
+ 263   1         w1ms();
+ 264   1         LCD_E   = True;
+ 265   1           w1ms();
+ 266   1         LCD_E   = False;
+ 267   1         w1ms();
+ 268   1         LCD_DB4 = False;
+ 269   1         LCD_E   = True;
+ 270   1           w1ms();
+ 271   1         LCD_E   = False;
+ 272   1         w1ms();
+ 273   1         Lcd_WriteControl(LCD_CONFIG);     
+ 274   1         Lcd_WriteControl(LCD_CLEAR);      
+ 275   1         Lcd_WriteControl(LCD_DISPLAY_OFF);
+ 276   1         Lcd_WriteControl(LCD_DISPLAY_ON); 
+ 277   1         Lcd_WriteControl(LCD_ENTRY_MODE); 
+ 278   1        
+ 279   1         LCDBuildChar(0, LoadingChar0);                    
+ 280   1         LCDBuildChar(1, LoadingChar1);                   
+ 281   1         LCDBuildChar(2, LoadingChar2);
+ 282   1         LCDBuildChar(3, LoadingChar3);                    
+ 283   1         LCDBuildChar(4, LoadingChar4);   
+ 284   1         
+ 285   1         //Lcd_WriteControl(LCD_CURSOR_COM); 
+ 286   1         Lcd_WriteControl(LCD_CLEAR);      
+ 287   1       }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    483    ----
+   CONSTANT SIZE    =     65    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     35      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V9.56.0.0   LCD                                                               05/27/2017 11:20:15 PAGE 6   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

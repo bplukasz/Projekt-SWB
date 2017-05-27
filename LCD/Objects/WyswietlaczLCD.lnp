@@ -1,0 +1,6 @@
+".\Objects\WyswietlaczLCD.obj",
+".\Objects\LCD.obj",
+".\Objects\wait1.obj" 
+TO ".\Objects\WyswietlaczLCD" 
+
+PRINT(".\Listings\WyswietlaczLCD.map")

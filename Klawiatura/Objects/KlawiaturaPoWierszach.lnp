@@ -1,0 +1,4 @@
+".\Objects\KlaawiaturaPoWierszach.obj" 
+TO ".\Objects\KlawiaturaPoWierszach" 
+
+PRINT(".\Listings\KlawiaturaPoWierszach.map")
