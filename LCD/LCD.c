@@ -48,39 +48,7 @@ unsigned char LoadingChar4[] = {	0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f};
 #define LCD_SET_DDRAM_ADDR	0x80
 
 static void Lcd_WriteData (unsigned char LcdData);
-/*
-#ifndef __LCD4B_H__
-#define __LCD4B_H__
 
-sbit LcdEnable = 0xA0^6;
-sbit LcdRead	=	0xA0^5;
-sbit LcdReg	=	0xA0^4;
-
-void WriteToLcdCtrlRegister(char X)
-{
-	LcdReg = 0;								// ustawienie sygnalów sterujacych
-	LcdRead = 0;
-	Lcd_WriteData(X);
-}
-
-void LcdWrite(char X)
-{
-	LcdReg = 1;
-	LcdRead = 0;
-	Lcd_WriteData(X);
-}
-
-void DefineSpecialCharacters(char *ptr)
-{
-	WriteToLcdCtrlRegister(0x40);		// ustawienie trybu definicji
-	while (*ptr != 0)						// petla wykonywana do napotkania znaku konca tablicy
-	{
-		LcdWrite(*ptr);					// zapis znaku do lcd cgram
-		ptr++;								// nastepna pozycja tablicy (wskaznika)
-	}
-	WriteToLcdCtrlRegister(0x80);		// przelaczenie do trybu wyswietlania
-}
-*/
 // Definicje ekranow
 static unsigned char code Screan[] =  "                "
                                       "                "
@@ -240,7 +208,7 @@ void Lcd_DisplayString (char row, char column, char *string)
 {
      unsigned char i;
 	 
-     if(loc<8)                                 //If valid address
+     if(loc<8)                                 
 	 {
          Lcd_WriteControl(0x40+(loc*8));               //Write to CGRAM
          for(i=0;i<8;i++)Lcd_WriteData(p[i]);                   //Write the character pattern to CGRAM
