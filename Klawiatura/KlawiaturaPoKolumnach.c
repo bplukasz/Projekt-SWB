@@ -9,11 +9,13 @@ char code dekoder[12] = {1,4,7,10,2,5,8,11,3,6,9,12};
 unsigned char Prawy;
 unsigned char Lewy;
 unsigned char dana;
+unsigned char ID;
 
-void Nadaj(unsigned char Dana)
+void Nadaj(unsigned char Dana, unsigned char Adresat)
  {
-   P3_4 = 1;
+	 P3_4 = 1;
    TI = 0;
+	 Dana=(Adresat<<6)|Dana;
    SBUF = Dana;
    while(TI == 0) {;}
    TI = 0;
@@ -58,6 +60,7 @@ void main(void){
 	ES = 1;
 	EA = 1;
 	P3_4 = 0;
+	ID=1;
 	while(1){
 		if(i==3)i=0;
 		if(j==12)j=0;
@@ -79,7 +82,7 @@ void main(void){
 				Prawy=nacisniety1; 
 				Lewy=nacisniety2; 
 				dana = (Lewy*10)+Prawy;
-				Nadaj(dana);
+				Nadaj(dana, 3);
 				nacisniety1 = 0x00;
 				nacisniety2 = 0x00;
 			}

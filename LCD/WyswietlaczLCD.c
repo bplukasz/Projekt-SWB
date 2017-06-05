@@ -21,6 +21,8 @@ unsigned char godzinaP;
 volatile unsigned char Loading;
 unsigned char Lewy;
 unsigned char Prawy;
+unsigned char ID;
+unsigned char Transmisja;
 
 unsigned char flagaTestowa=0x00;
 
@@ -80,23 +82,29 @@ void SerialInit(void)
 	
 void ISR_serial(void) interrupt 4
 {
-	if (RI == 1) {
-		if(SBUF=='m'){
-			Prawy++;
-			if(Prawy==10){
-				Prawy=0;
-				Lewy++;
+	if(RI==1){
+		if (RI == 1) {
+			Transmisja=SBUF;
+			if(Transmisja>>6==ID){
+				Transmisja=Transmisja&0x3F;
+				if(Transmisja=='<'){
+					Prawy++;
+					if(Prawy==10){
+						Prawy=0;
+						Lewy++;
+					}
+					if(Lewy==6){
+						Lewy=0;
+						godzinaP++;
+					}
+				}
+				else{
+					if(Transmisja<24)godzina = Transmisja;
+				}
+				Click();
 			}
-			if(Lewy==6){
-				Lewy=0;
-				godzinaP++;
-			}
+			RI=0;
 		}
-		else{
-			if(SBUF<24)godzina = SBUF;
-		}
-		Click();
-		RI=0;
 	}
 }
 
@@ -108,6 +116,8 @@ void main(void){
 	EA = 1;
 	P3_4 = 0;
 	TR2=1;
+	ID=3;
+	Transmisja=0x00;
 	LcdWelcome();
 	Lcd_DisplayString(1,1,Bufor);
 	Lcd_DisplayString(2,1,"Godzina: ");

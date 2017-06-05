@@ -7,10 +7,12 @@ char code klawisze[12] = {0xE7, 0xEB, 0xED, 0xD7, 0xDB, 0xDD, 0xB7, 0xBB, 0xBD, 
 unsigned char Prawy;
 unsigned char Lewy;
 unsigned char dana;
-void Nadaj(unsigned char Dana)
+
+void Nadaj(unsigned char Dana, unsigned char Adresat)
  {
-   P3_4 = 1;
+	 P3_4 = 1;
    TI = 0;
+	 Dana=(Adresat<<6)|Dana;
    SBUF = Dana;
    while(TI == 0) {;}
    TI = 0;
@@ -78,7 +80,7 @@ void main(void){
 				Prawy=nacisniety1; 
 				Lewy=nacisniety2; 
 				dana = (Lewy*10)+Prawy;
-				Nadaj(dana);
+				Nadaj(dana,3);
 				nacisniety1 = 0x00;
 				nacisniety2 = 0x00;
 			}

@@ -20,15 +20,17 @@ void ISR_Serial(void) interrupt 4
     }
  }
 
-void Nadaj(unsigned char Dana)
+void Nadaj(unsigned char Dana, unsigned char Adresat)
  {
-   P3_4 = 1;
+	 P3_4 = 1;
    TI = 0;
+	 Dana=(Adresat<<6)|Dana;
    SBUF = Dana;
    while(TI == 0) {;}
    TI = 0;
    P3_4 = 0;
  } 
+ 
  
  void Wyswietlanie(){
 	 PrawyW=dekoder[Prawy]; 
@@ -43,7 +45,7 @@ void Nadaj(unsigned char Dana)
 	}
 	if(Lewy==6){
 		Lewy=0;
-		Nadaj('m');
+		Nadaj('<',3);
 	}
  }
  
@@ -60,7 +62,7 @@ void Nadaj(unsigned char Dana)
  
  void ISR_INT0(void) interrupt 0{
 	inkrementuj();
-	Nadaj('m');
+	Nadaj('<',3);
 }
 
  void SerialInit(void)
